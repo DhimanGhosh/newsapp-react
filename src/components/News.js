@@ -10,7 +10,6 @@ export class News extends Component {
     pageSize: 8,
     category: "general",
     badgeColor: "success",
-    // apiKey: "e1cbf7941ba44b37bcf9e51cf289b804",
   };
 
   static propTypes = {
