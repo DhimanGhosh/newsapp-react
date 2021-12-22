@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import NewsItem from "./NewsItem";
 import Spinner from "./Spinner";
 import PropTypes from "prop-types";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 export class News extends Component {
   static defaultProps = {
@@ -29,7 +30,7 @@ export class News extends Component {
     // console.log("1. News component constructor");
     this.state = {
       articles: [],
-      loading: false,
+      loading: true,
       page: 1,
       totalResults: 0,
     };
@@ -43,7 +44,6 @@ export class News extends Component {
     this.setState({ loading: true });
     let data = await fetch(url);
     let parsedData = await data.json();
-    console.log(parsedData);
     this.setState({
       articles: parsedData.articles,
       totalResults: parsedData.totalResults,
@@ -56,92 +56,71 @@ export class News extends Component {
     this.updateNews();
   }
 
-  handleNewsPagination = async (btn) => {
-    console.log(btn);
-
-    if (btn === "prev") {
-      this.setState({ page: this.state.page - 1 });
-      this.updateNews();
-    } else if (btn === "next") {
-      if (
-        this.state.page + 1 <=
-        Math.ceil(this.state.totalResults / this.props.pageSize)
-      ) {
-        this.setState({ page: this.state.page + 1 });
-        this.updateNews();
-      }
-    }
+  fetchMoreData = async () => {
+    this.setState({
+      page: this.state.page + 1,
+    });
+    const url = `https://newsapi.org/v2/top-headlines?q=news&category=${this.props.category}&country=${this.props.country}&apiKey=${this.props.apiKey}&page=${this.state.page}&pageSize=${this.props.pageSize}`;
+    let data = await fetch(url);
+    let parsedData = await data.json();
+    this.setState({
+      articles: this.state.articles.concat(parsedData.articles),
+      totalResults: parsedData.totalResults,
+    });
   };
 
   render() {
     // console.log("2. render");
     return (
-      <div className="container my-3">
+      <>
         <h1 className="text-center" style={{ margin: "35px 0px" }}>
-          NewsMonkey - Top {this.capitalizeFirstLetter(this.props.category)} Headlines
+          NewsMonkey - Top {this.capitalizeFirstLetter(this.props.category)}{" "}
+          Headlines
         </h1>
         {this.state.loading && <Spinner />}
-        <div className="row">
-          {!this.state.loading &&
-            this.state.articles.map((element) => {
-              return (
-                <div className="col-md-3" key={element.url}>
-                  <NewsItem
-                    imageUrl={
-                      element.urlToImage
-                        ? element.urlToImage
-                        : "https://static.toiimg.com/thumb/msid-82213583,width-1070,height-580,imgsize-1921513,resizemode-75,overlay-toi_sw,pt-32,y_pad-40/photo.jpg"
-                    }
-                    newsSource={
-                      element.source.name ? element.source.name : "Explore"
-                    }
-                    title={element.title ? element.title.slice(0, 40) : ""}
-                    description={
-                      element.description
-                        ? element.description.slice(0, 80)
-                        : ""
-                    }
-                    newsDate={
-                      element.publishedAt
-                        ? new Date(element.publishedAt).toGMTString()
-                        : ""
-                    }
-                    newsUrl={element.url ? element.url : ""}
-                    newsAuthor={element.author ? element.author : "Unknown"}
-                    badgeColor={this.props.badgeColor}
-                  />
-                </div>
-              );
-            })}
-        </div>
-        {!this.state.loading && (
-          <div className="container d-flex justify-content-between">
-            <button
-              disabled={this.state.page <= 1}
-              type="button"
-              className="btn btn-dark"
-              onClick={() => {
-                this.handleNewsPagination("prev");
-              }}
-            >
-              &#8592; Previous
-            </button>
-            <button
-              disabled={
-                this.state.page + 1 >
-                Math.ceil(this.state.totalResults / this.props.pageSize)
-              }
-              type="button"
-              className="btn btn-dark"
-              onClick={() => {
-                this.handleNewsPagination("next");
-              }}
-            >
-              Next &#8594;
-            </button>
+        <InfiniteScroll
+          dataLength={this.state.articles.length}
+          next={this.fetchMoreData}
+          hasMore={this.state.articles.length !== this.state.totalResults}
+          loader={<Spinner />}
+        >
+          <div className="container my-3">
+            <div className="row">
+              {/* {!this.state.loading && */}
+              {this.state.articles.map((element) => {
+                return (
+                  <div className="col-md-3" key={element.url}>
+                    <NewsItem
+                      imageUrl={
+                        element.urlToImage
+                          ? element.urlToImage
+                          : "https://static.toiimg.com/thumb/msid-82213583,width-1070,height-580,imgsize-1921513,resizemode-75,overlay-toi_sw,pt-32,y_pad-40/photo.jpg"
+                      }
+                      newsSource={
+                        element.source.name ? element.source.name : "Explore"
+                      }
+                      title={element.title ? element.title.slice(0, 40) : ""}
+                      description={
+                        element.description
+                          ? element.description.slice(0, 80)
+                          : ""
+                      }
+                      newsDate={
+                        element.publishedAt
+                          ? new Date(element.publishedAt).toGMTString()
+                          : ""
+                      }
+                      newsUrl={element.url ? element.url : ""}
+                      newsAuthor={element.author ? element.author : "Unknown"}
+                      badgeColor={this.props.badgeColor}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
-      </div>
+        </InfiniteScroll>
+      </>
     );
   }
 }
