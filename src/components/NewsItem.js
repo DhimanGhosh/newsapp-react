@@ -15,15 +15,17 @@ export class NewsItem extends Component {
     return (
       <div className="my-3">
         <div className="card">
-          <img src={imageUrl} className="card-img-top" alt="" />
-          <div className="card-body">
+          <div id="badge">
             <span
-              className={`position-absolute top-0 translate-middle badge rounded-pill bg-${badgeColor} text-${
+              className={`badge rounded-pill bg-${badgeColor} text-${
                 badgeColor === "light" ? "dark" : "light"
               }`}
             >
               {newsSource}
             </span>
+          </div>
+          <img src={imageUrl} className="card-img-top" alt="" />
+          <div className="card-body">
             <h5 className="card-title">{title}...</h5>
             <p className="card-text">{description}...</p>
             <p className="card-text">
